@@ -25,18 +25,36 @@ class GoogleCalendarAdapter extends ICalendarRepository {
             return this.authClient;
         }
 
-        const credentials = JSON.parse(await fs.readFile(this.CREDENTIALS_PATH));
+        // Intentar leer credenciales desde variables de entorno primero (producción)
+        let credentials;
+        if (process.env.GOOGLE_CREDENTIALS) {
+            console.log('📦 Usando credenciales de Google desde variable de entorno');
+            credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+        } else {
+            console.log('📁 Usando credenciales de Google desde archivo local');
+            credentials = JSON.parse(await fs.readFile(this.CREDENTIALS_PATH));
+        }
+
         const { client_secret, client_id, redirect_uris } = credentials.installed;
         const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
 
-        try {
-            const token = JSON.parse(await fs.readFile(this.TOKEN_PATH));
-            oAuth2Client.setCredentials(token);
-            this.authClient = oAuth2Client;
-            return oAuth2Client;
-        } catch (err) {
-            throw new Error('No se encontró token.json. Ejecuta primero: node test-calendar.js');
+        // Intentar leer token desde variables de entorno primero (producción)
+        let token;
+        if (process.env.GOOGLE_TOKEN) {
+            console.log('🔑 Usando token de Google desde variable de entorno');
+            token = JSON.parse(process.env.GOOGLE_TOKEN);
+        } else {
+            try {
+                console.log('🔑 Usando token de Google desde archivo local');
+                token = JSON.parse(await fs.readFile(this.TOKEN_PATH));
+            } catch (err) {
+                throw new Error('No se encontró token.json. Ejecuta primero: node test-calendar.js');
+            }
         }
+
+        oAuth2Client.setCredentials(token);
+        this.authClient = oAuth2Client;
+        return oAuth2Client;
     }
 
     /**
