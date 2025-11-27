@@ -149,7 +149,7 @@ class WhatsAppAdapter {
      * @param {string} serviceId 
      */
     async sendDayOptions(to, days, serviceId) {
-        const buttons = days.map((date, index) => {
+        const options = days.map((date, index) => {
             const isToday = new Date().toDateString() === date.toDateString();
             const isTomorrow = new Date(new Date().setDate(new Date().getDate() + 1)).toDateString() === date.toDateString();
 
@@ -165,8 +165,8 @@ class WhatsAppAdapter {
             today.setHours(0, 0, 0, 0);
             const dateNoTime = new Date(date);
             dateNoTime.setHours(0, 0, 0, 0);
-            const diffTime = Math.abs(dateNoTime - today);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffTime = dateNoTime.getTime() - today.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
             return {
                 id: `day_${diffDays}_${serviceId}`,
@@ -174,13 +174,37 @@ class WhatsAppAdapter {
             };
         });
 
-        buttons.push({ id: 'back_svc', title: '🔙 Volver' });
+        const backOption = { id: 'back_svc', title: '🔙 Volver' };
 
-        await this.sendInteractiveMessage(
-            to,
-            '📅 ¿Para qué día quieres la cita?',
-            buttons
-        );
+        // Si hay 3 opciones o menos (incluyendo volver), usamos botones
+        if (options.length + 1 <= 3) {
+            options.push(backOption);
+            await this.sendInteractiveMessage(
+                to,
+                '📅 ¿Para qué día quieres la cita?',
+                options
+            );
+        } else {
+            // Si hay más, usamos lista
+            // Añadimos volver a la lista
+            options.push({
+                id: backOption.id,
+                title: backOption.title,
+                description: 'Volver al menú anterior'
+            });
+
+            await this.sendInteractiveListMessage(
+                to,
+                '📅 ¿Para qué día quieres la cita?',
+                'Ver Días',
+                [
+                    {
+                        title: 'Días Disponibles',
+                        rows: options
+                    }
+                ]
+            );
+        }
     }
 
     /**

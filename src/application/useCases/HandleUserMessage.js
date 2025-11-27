@@ -136,7 +136,7 @@ class HandleUserMessage {
             // Vamos a usar this.appointmentService.availabilityService que sí lo tiene.
 
             const startDate = new Date();
-            const availableDays = await this.appointmentService.availabilityService.getNextAvailableDays(startDate, 3, duration);
+            const availableDays = await this.appointmentService.availabilityService.getNextAvailableDays(startDate, 5, duration);
 
             if (availableDays.length === 0) {
                 await this.whatsappAdapter.sendTextMessage(from, '😔 Lo siento, no he encontrado huecos disponibles en los próximos días. Por favor, contacta con Luis directamente.');

@@ -134,7 +134,7 @@ class AvailabilityService {
         const availableDays = [];
         let currentCheckDate = new Date(startDate);
         let checks = 0;
-        const maxChecks = 14; // Límite de seguridad para no buclear infinitamente
+        const maxChecks = 10; // Aumentado para encontrar 5 días si hay festivos/llenos
 
         while (availableDays.length < count && checks < maxChecks) {
             const slots = await this.getAvailableSlots(currentCheckDate, duration);
